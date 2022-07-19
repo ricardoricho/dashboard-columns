@@ -1,0 +1,50 @@
+#+TITLE: Dashboard columns
+
+A hack to show dashboard items in columns
+
+* Instalation
+
+Clone repository from any source:
+- Sourcehut
+- Github
+
+#+begin_src sh
+  git clone http:sr.ht/~richo/dasboard-columns
+#+end_src
+
+Add path to ~load-path~
+#+begin_src emacs-lisp
+  (add-to-list <dashboard-colums-path> 'load-path)
+#+end_src
+
+* Usage
+
+Activate columns
+#+begin_src emacs-lisp
+  (dashboard-columns-activate)
+#+end_src
+
+Deactivate columns
+#+begin_src emacs-lisp
+  (dasboard-columns-deactivate)
+#+end_src
+
+* Use-package
+
+After add
+#+begin_src emacs-lisp
+  (use-package dashboard-columns
+    :after dashboard
+    :config
+    (dashboard-columns-activate))
+#+end_src
+
+* Straight
+
+#+begin_src emacs-lisp
+  (use-package dashboard-columns
+    :straight (dashboard-columns :type git :repo "https://sr.ht/~richo/dashboard-columns")
+    :after dashboard
+    :config
+    (dashboard-columns-activate))
+#+end_src
