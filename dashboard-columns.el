@@ -5,6 +5,11 @@
 (require  'cl-lib)
 (require 'dashboard)
 
+(defface dashboard-columns-items-face
+  '((t (:inherit dashboard-items-face :height 1.0)))
+  "Face used for column items."
+  :group 'dashboard)
+
 (defun dashboard-columns--insert-section (name list config shortcut action)
   "Add a section with NAME, take CONFIG items from LIST if CONFIG  is a number.
 CONFIG could also be a pair (ITEMS . COLUMNS) where ITEMS is the number of items
@@ -36,7 +41,8 @@ Define a function `dashboard-go-to-<section>'"
     (insert (concat " (" shortcut-symbol ")\n\n"))
     (define-key dashboard-mode-map shortcut-symbol
       (lambda () docstring
-        (interactive) (goto-char shortcut-point) (forward-line)))))
+        (interactive)
+        (goto-char shortcut-point) (forward-line)))))
 
 (defun dashboard-columns--insert (widget columns action)
   "Insert WIDGET with ACTION in buffer splited in COLUMNS.
@@ -57,7 +63,7 @@ WIDGET is a list of widget-buttons that are basically strings."
                          :tag tag
                          :action action
                          :value tag
-                         :button-face 'dashboard-items-face
+                         :button-face 'dashboard-columns-items-face
                          :mouse-face 'highlight
                          :button-prefix "  "
                          :button-suffix padding

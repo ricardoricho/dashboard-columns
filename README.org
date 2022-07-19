@@ -43,7 +43,7 @@ After add
 
 #+begin_src emacs-lisp
   (use-package dashboard-columns
-    :straight (dashboard-columns :type git :repo "https://sr.ht/~richo/dashboard-columns")
+    :straight (dashboard-columns :type git :repo "https://git.sr.ht/~richo/dashboard-columns")
     :after dashboard
     :config
     (dashboard-columns-activate))
