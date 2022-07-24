@@ -4,6 +4,7 @@
 
 (require  'cl-lib)
 (require 'dashboard)
+(require 'all-the-icons)
 
 (defun dashboard-columns--insert-section (name list config shortcut action)
   "Add a section with NAME, take CONFIG items from LIST if CONFIG  is a number.
@@ -21,8 +22,9 @@ Add SHORTCUT to reach section and ACTION is for the widget action of each item."
 
 (defun dashboard-columns--insert-heading (name shortcut)
   "Insert a heading section with NAME and a SHORTCUT."
-  (insert " ")
-  ;; INSERT ICON
+  (insert (format "%s " (all-the-icons-octicon
+                         (cdr (assoc shortcut dashboard-heading-icons))
+                         :height 1.2 :v-adjust 0.0 :face 'dashboard-heading)))
   (insert (propertize name 'face 'dashboard-heading))
   (dashboard-columns--insert-shortcut shortcut))
 
@@ -48,7 +50,7 @@ WIDGET is a list of widget-buttons that are basically strings."
         (let* ((item-width (string-width item))
                ;; Truncate element TAG
                (tag (if (< item-width column-length) item
-                      (truncate-string-to-width item column-length)))
+                      (truncate-string-to-width item (- column-length 1))))
                (format-padding (if (< item-width column-length)
                                    (format "%%%ss" (- column-length item-width))
                                  "%1s"))
@@ -103,40 +105,59 @@ WIDGET is a list of widget-buttons that are basically strings."
   "Overwrite `dashboard-insert-projects' pass CONFIG as argument."
   (dashboard-columns--insert-section
    "Projects:"
-   (dashboard-projects-backend-load-projects)
+   (dashboard-columns--list-projects)
    config
    'projects
    (lambda (widget &rest _)
      (let ((action (dashboard-projects-backend-switch-function))
-           (file (widget-value widget)))
+           ;; TODO: ensure get property from correct position
+           (file (get-text-property 4 'dashboard-project-path
+                                    (widget-value widget))))
        (funcall action file)))))
 
-;; ;; Recents
-;; (defun dashboard-columns--insert-recents (config)
-;;   "Insert recent files widget using CONFIG.  Overwrite `dashboard-insert-recents'."
-;;   (dashboard-columns--insert-section
-;;    "Recent Files:"
-;;    (dashboard-grid--recent-files)
-;;    config
-;;    'recents
-;;    (lambda (widget &rest _)
-;;      (find-file-existing (dashboard-grid-expand-path widget)))))
+(defun dashboard-columns--list-projects ()
+  "List the projects for columns."
+  (let ((projects (dashboard-projects-backend-load-projects)))
+    (mapcar 'dashboard-columns--format-project projects)))
 
-;; (defun dashboard-grid-expand-path (widget)
-;;   "Expand file path stor in WIDGET properties."
-;;   (let ((widget-file (get-text-property 0 'file-path (widget-value widget))))
-;;     widget-file))
+(defun dashboard-columns--format-project (project)
+  "Format PROJECT for dashboard, includes properties."
+  (let* ((path (expand-file-name project))
+         (name (file-name-nondirectory (directory-file-name project))))
+    (add-text-properties 0 (length name)
+                         (list 'dashboard-project-name name
+                               'dashboard-project-path path)
+                         name)
+    (format "%s %s - %s"
+            (all-the-icons-icon-for-dir project :heigth 1.2 :v-adjust 0.0 )
+            name project)))
 
-;; (defun dashboard-grid--recent-files ()
-;;   "Get recent files."
-;;   (mapcar 'dashboard-grid--recents-format recentf-list))
+;; Bookmarks
+(defun dashboard-columns--insert-bookmarks (config)
+  "Use CONFIG to insert bookmarks in dashboard."
+  (require 'bookmark)
+  (dashboard-columns--insert-section
+   "Bookmarks:"
+   (dashboard-columns--bookmarks)
+   config
+   'bookmarks
+   (lambda (widget &rest _) (bookmark-jump (widget-value widget)))))
 
-;; (defun dashboard-grid--recents-format (recent)
-;;   "Format RECENT file."
-;;   (let ((filename (format "%s" recent))
-;;         (recent-data (list 'file-path (format "%s" recent))))
-;;     (add-text-properties 0 (length filename) recent-data filename)
-;;     filename))
+(defun dashboard-columns--bookmarks ()
+  "Return a list of formatted bookmarks."
+  (mapcar 'dashboard-columns--bookmarks-format (bookmark-all-names)))
+
+(defun dashboard-columns--bookmarks-format (bookmark)
+  "Format a BOOKMARK."
+  (let ((filename bookmark)
+        (path (expand-file-name bookmark)))
+    (add-text-properties 0 (length bookmark)
+                         (list 'dashboard-path path
+                               'dashboard-filename filename)
+                         bookmark)
+    (format "%s %s"
+            (all-the-icons-icon-for-file bookmark :heigth 1.2 :v-adjust 0.0)
+            bookmark)))
 
 ;;;###autoload;
 (defun dashboard-columns-activate ()
@@ -145,15 +166,20 @@ WIDGET is a list of widget-buttons that are basically strings."
   (advice-add 'dashboard-insert-agenda :override
               'dashboard-columns--insert-agenda)
   (advice-add 'dashboard-insert-projects :override
-              'dashboard-columns--insert-projects))
+              'dashboard-columns--insert-projects)
+  (advice-add 'dashboard-insert-bookmarks :override
+              'dashboard-columns--insert-bookmarks))
 
 ;;;###autoload;
 (defun dashboard-columns-deactivate ()
   "Undefined the aliases for dashboards insert's."
   (interactive)
-  (advice-remove 'dashboard-insert-agenda 'dashboard-columns--insert-agenda)
+  (advice-remove 'dashboard-insert-agenda
+                 'dashboard-columns--insert-agenda)
   (advice-remove 'dashboard-insert-projects
-                 'dashboard-columns--insert-projects))
+                 'dashboard-columns--insert-projects)
+  (advice-remove 'dashboard-insert-bookmarks
+                 'dashboard-columns--insert-bookmarks))
 
 (provide 'dashboard-columns)
 ;;; dashboard-columns.el ends here
