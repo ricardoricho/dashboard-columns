@@ -6,6 +6,9 @@
 (require 'dashboard)
 (require 'all-the-icons)
 
+(defvar dashboard-columns-old-items nil
+  "Store dashboard-items when columns are activated.")
+
 (defun dashboard-columns--insert-section (name list config shortcut action)
   "Add a section with NAME, take CONFIG items from LIST if CONFIG  is a number.
 CONFIG could also be a pair (ITEMS . COLUMNS) where ITEMS is the number of items
@@ -160,9 +163,11 @@ WIDGET is a list of widget-buttons that are basically strings."
             bookmark)))
 
 ;;;###autoload;
-(defun dashboard-columns-activate ()
-  "Define alias for dashboard insert's."
+(defun dashboard-columns-activate (items)
+  "Define alias for `dashboard-insert' to insert ITEMS."
   (interactive)
+  (setq dashboard-columns-old-items dashboard-items)
+  (setq dashboard-items items)
   (advice-add 'dashboard-insert-agenda :override
               'dashboard-columns--insert-agenda)
   (advice-add 'dashboard-insert-projects :override
@@ -174,6 +179,7 @@ WIDGET is a list of widget-buttons that are basically strings."
 (defun dashboard-columns-deactivate ()
   "Undefined the aliases for dashboards insert's."
   (interactive)
+  (setq dashboard-items dashboard-columns-old-items)
   (advice-remove 'dashboard-insert-agenda
                  'dashboard-columns--insert-agenda)
   (advice-remove 'dashboard-insert-projects
