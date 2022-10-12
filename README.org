@@ -23,6 +23,7 @@ Add path to ~load-path~
 * Usage
 
 Activate columns with a list of dashboard items, size and number of columns, for example:
+
 #+begin_src emacs-lisp
   (dashboard-columns-activate '((bookmarks 15 . 3)
                                 (projects 15 . 3)
