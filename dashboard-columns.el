@@ -9,27 +9,30 @@
 (defvar dashboard-columns-old-items nil
   "Store dashboard-items when columns are activated.")
 
-(defun dashboard-columns--insert-section (name list config shortcut action)
-  "Add a section with NAME, take CONFIG items from LIST if CONFIG  is a number.
+(defun dashboard-columns--insert-section (title list config shortcut action)
+  "Add a section with TITLE, take CONFIG items from LIST if CONFIG  is a number.
 CONFIG could also be a pair (ITEMS . COLUMNS) where ITEMS is the number of items
 to take from LIST and COLUMNS is the number of columns to use in that section.
 Add SHORTCUT to reach section and ACTION is for the widget action of each item."
-  (let ((size (or (and (numberp config) config)
-                  (car config)))
-        (columns (or (and (numberp config) 2) ;; Defult number of columns.
-                     (cdr config))))
+  (let* ((size (or (and (numberp config) config)
+                   (car config)))
+         (columns (or (and (numberp config) 2) ;; Defult number of columns.
+                      (cdr config)))
+         (items (cl-subseq list 0 (min (length list) size))))
     (progn
-      (dashboard-columns--insert-heading name shortcut)
-      (dashboard-columns--insert
-       (cl-subseq list 0 (min (length list) size)) columns action))))
+      (dashboard-columns--insert-heading title shortcut)
+      (dashboard-columns--insert title items columns action shortcut))))
 
 (defun dashboard-columns--insert-heading (name shortcut)
   "Insert a heading section with NAME and a SHORTCUT."
-  (insert (format "%s " (all-the-icons-octicon
-                         (cdr (assoc shortcut dashboard-heading-icons))
-                         :height 1.2 :v-adjust 0.0 :face 'dashboard-heading)))
+  (insert (dashboard-columns--insert-heading-icon shortcut))
   (insert (propertize name 'face 'dashboard-heading))
   (dashboard-columns--insert-shortcut shortcut))
+
+(defun dashboard-columns--insert-heading-icon (shortcut)
+  "Insert heading icon for SHORTCUT."
+  (format "%s " (all-the-icons-octicon
+                 (cdr (assoc shortcut dashboard-heading-icons)))))
 
 (defun dashboard-columns--insert-shortcut (shortcut)
   "Insert SHORTCUT into dashboard.
@@ -44,8 +47,8 @@ Define a function `dashboard-go-to-<section>'"
         (interactive)
         (goto-char shortcut-point) (forward-line)))))
 
-(defun dashboard-columns--insert (widget columns action)
-  "Insert WIDGET with ACTION in buffer splited in COLUMNS.
+(defun dashboard-columns--insert (name widget columns action section)
+  "Insert WIDGET NAME with ACTION in buffer splited in COLUMNS.
 WIDGET is a list of widget-buttons that are basically strings."
   (let ((column-length (ceiling (- (frame-width) (* 4 columns)) columns)))
     (dolist (group (reverse (dashboard-columns--slice widget columns)))
@@ -58,14 +61,16 @@ WIDGET is a list of widget-buttons that are basically strings."
                                    (format "%%%ss" (- column-length item-width))
                                  "%1s"))
                (padding (format format-padding "")))
-
+          (add-text-properties 0 (string-width tag)
+                               (list 'dashboard-section section)
+                               tag)
           (widget-create 'item
                          :tag tag
                          :action action
                          :value tag
                          :button-face 'dashboard-items-face
                          :mouse-face 'highlight
-                         :button-prefix "  "
+                         :button-prefix " "
                          :button-suffix padding
                          :format "%[%t%]")
           ))
@@ -85,6 +90,24 @@ WIDGET is a list of widget-buttons that are basically strings."
                               (cons (car list) group) result))
    (t (dashboard-columns--group (cdr list) columns
                                 (list (car list)) (cons group result)))))
+
+
+(defun dashboard-columns--action-on-item (widget action &rest params)
+  "Call ACTION with WIDGET item as param."
+  (let* ((item (widget-value widget))
+         (action-params (dashboard-columns--attributes item params)))
+    (apply action action-params)))
+
+(defun dashboard-columns--attributes (item params)
+  "Get text properites in PARAMS list from ITEM."
+  (let* ((dashboard-prefix "dashboard-")
+         (properties
+          (mapcar (lambda (property)
+                    (concat dashboard-prefix (symbol-name property)))
+                  params)))
+    (mapcar (lambda (property)
+              (get-text-property 0 (intern property) item))
+            properties)))
 
 ;; Overwrite dashboard inserts
 

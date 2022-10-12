@@ -6,10 +6,13 @@ A hack to show dashboard items in columns
 
 Clone repository from any source:
 - Sourcehut
-- Github
-
 #+begin_src sh
-  git clone http:sr.ht/~richo/dasboard-columns
+  git clone http://sr.ht/~richo/dasboard-columns
+#+end_src
+
+- Github
+#+begin_src
+  git clone http://github.com/ricardoricho/dashboard-columns
 #+end_src
 
 Add path to ~load-path~
@@ -19,21 +22,27 @@ Add path to ~load-path~
 
 * Usage
 
-Activate columns
+Activate columns with a list of dashboard items, size and number of columns, for example:
 #+begin_src emacs-lisp
-  (dashboard-columns-activate)
+  (dashboard-columns-activate '((bookmarks 15 . 3)
+                                (projects 15 . 3)
+                                (agenda . 20)))
 #+end_src
 
-Deactivate columns
+That would split a list of 15 bookmarks in 3 columns, 15 projects in 3 columns
+and 20 agenda items in 2 (default) columns.
+
+To restore origial dashboard, columns hack could be deactivated.
 #+begin_src emacs-lisp
   (dasboard-columns-deactivate)
 #+end_src
 
 * Use-package
 
-After add
+Add after dashboard
 #+begin_src emacs-lisp
   (use-package dashboard-columns
+    :load-path "Path to dashboard-columns soruce"
     :after dashboard
     :config
     (dashboard-columns-activate))
