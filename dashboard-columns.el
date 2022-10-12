@@ -144,7 +144,10 @@ WIDGET is a list of widget-buttons that are basically strings."
    (dashboard-columns--bookmarks)
    config
    'bookmarks
-   (lambda (widget &rest _) (bookmark-jump (widget-value widget)))))
+   (lambda (widget &rest _)
+     (let ((filename (get-text-property 4 'dashboard-filename
+                                        (widget-value widget))))
+       (bookmark-jump filename)))))
 
 (defun dashboard-columns--bookmarks ()
   "Return a list of formatted bookmarks."
