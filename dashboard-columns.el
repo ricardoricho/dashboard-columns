@@ -16,7 +16,7 @@ to take from LIST and COLUMNS is the number of columns to use in that section.
 Add SHORTCUT to reach section and ACTION is for the widget action of each item."
   (let* ((size (or (and (numberp config) config)
                    (car config)))
-         (columns (or (and (numberp config) 2) ;; Defult number of columns.
+         (columns (or (and (numberp config) 2) ;; Default number of columns.
                       (cdr config)))
          (items (cl-subseq list 0 (min (length list) size))))
     (progn
@@ -121,10 +121,19 @@ WIDGET is a list of widget-buttons that are basically strings."
    config
    'agenda
    (lambda (widget &rest _)
-     (let* ((item (widget-value widget))
-            (file (get-text-property 0 'dashboard-agenda-file item))
-            (point (get-text-property 0 'dashboard-agenda-loc item)))
-       (funcall dashboard-agenda-action file point)))))
+     (dashboard-columns--action-on-item widget dashboard-agenda-action
+                                        'agenda-file 'agenda-loc))))
+
+(defun dashboard-columns--remove-agenda ()
+  "Call for `dashboard-columns--remove-item' over an agenda item."
+  (dashboard-columns--action-on-item
+   (widget-at (point))
+   ;; This could be remove-agenda-item function
+   (lambda (file point)
+     (with-current-buffer (find-file-noselect file)
+       (goto-char point)
+       (call-interactively 'org-todo)))
+   'agenda-file 'agenda-loc))
 
 ;; Projects
 (defun dashboard-columns--insert-projects (config)
@@ -135,11 +144,23 @@ WIDGET is a list of widget-buttons that are basically strings."
    config
    'projects
    (lambda (widget &rest _)
-     (let ((action (dashboard-projects-backend-switch-function))
-           ;; TODO: ensure get property from correct position
-           (file (get-text-property 4 'dashboard-project-path
-                                    (widget-value widget))))
-       (funcall action file)))))
+     (dashboard-columns--action-on-item widget
+                                        (dashboard-projects-backend-switch-function)
+                                        'project-path))))
+
+(defun dashboard-columns--remove-projects ()
+  "Call for `dashboard-columns--remove-item' over a project item."
+  (dashboard-columns--action-on-item
+   (widget-at (point))
+   'dashboard-columns--remove-project
+   'project-path))
+
+(defun dashboard-columns--remove-project (path)
+  "Call corresponding backend removing function with PATH as argument."
+  (dashboard-mute-apply
+    (cl-case dashboard-projects-backend
+      (`projectile (projectile-remove-known-project path))
+      (`project-el (project-forget-projects-under path)))))
 
 (defun dashboard-columns--list-projects ()
   "List the projects for columns."
@@ -149,14 +170,15 @@ WIDGET is a list of widget-buttons that are basically strings."
 (defun dashboard-columns--format-project (project)
   "Format PROJECT for dashboard, includes properties."
   (let* ((path (expand-file-name project))
-         (name (file-name-nondirectory (directory-file-name project))))
-    (add-text-properties 0 (length name)
-                         (list 'dashboard-project-name name
-                               'dashboard-project-path path)
-                         name)
-    (format "%s %s - %s"
+         (name (file-name-nondirectory (directory-file-name project)))
+         (project-format (format "%s %s - %s"
             (all-the-icons-icon-for-dir project :heigth 1.2 :v-adjust 0.0 )
             name project)))
+    (add-text-properties 0 (length project-format)
+                         (list 'dashboard-project-name name
+                               'dashboard-project-path path)
+                         project-format)
+    project-format))
 
 ;; Bookmarks
 (defun dashboard-columns--insert-bookmarks (config)
@@ -168,9 +190,15 @@ WIDGET is a list of widget-buttons that are basically strings."
    config
    'bookmarks
    (lambda (widget &rest _)
-     (let ((filename (get-text-property 4 'dashboard-filename
-                                        (widget-value widget))))
-       (bookmark-jump filename)))))
+     (dashboard-columns--action-on-item (widget-at (point))
+                                        'bookmark-jump
+                                        'filename))))
+
+(defun dashboard-columns--remove-bookmarks ()
+  "Call `dashboard-columns--remove-bookmark' with widget at point."
+  (dashboard-columns--action-on-item (widget-at (point))
+                                     'bookmark-delete
+                                     'filename))
 
 (defun dashboard-columns--bookmarks ()
   "Return a list of formatted bookmarks."
@@ -179,14 +207,29 @@ WIDGET is a list of widget-buttons that are basically strings."
 (defun dashboard-columns--bookmarks-format (bookmark)
   "Format a BOOKMARK."
   (let ((filename bookmark)
-        (path (expand-file-name bookmark)))
-    (add-text-properties 0 (length bookmark)
+        (path (expand-file-name bookmark))
+        (bookmark-format (format "%s %s"
+                                 (all-the-icons-icon-for-file bookmark :heigth 1.2 :v-adjust 0.0)
+                                 bookmark)))
+    (add-text-properties 0 (length bookmark-format)
                          (list 'dashboard-path path
                                'dashboard-filename filename)
-                         bookmark)
-    (format "%s %s"
-            (all-the-icons-icon-for-file bookmark :heigth 1.2 :v-adjust 0.0)
-            bookmark)))
+                         bookmark-format)
+    bookmark-format))
+
+(defun dashboard-columns--remove-bookmark (bookmark)
+  "Remove BOOKMARK from dashboard.")
+
+;; Remove items
+(defun dashboard-columns--remove-item ()
+  "Overwrite `dashboard-remove-item-under'."
+  (interactive)
+  (let* ((section (get-text-property 0 'dashboard-section
+                                     (widget-value (widget-at (point)))))
+         (section-name (symbol-name section))
+         (command (concat "dashboard-columns--remove-" section-name))
+         (remove-command (intern command)))
+    (funcall remove-command)))
 
 ;;;###autoload;
 (defun dashboard-columns-activate (items)
@@ -194,6 +237,8 @@ WIDGET is a list of widget-buttons that are basically strings."
   (interactive)
   (setq dashboard-columns-old-items dashboard-items)
   (setq dashboard-items items)
+  (advice-add 'dashboard-remove-item-under :override
+              'dashboard-columns--remove-item)
   (advice-add 'dashboard-insert-agenda :override
               'dashboard-columns--insert-agenda)
   (advice-add 'dashboard-insert-projects :override
@@ -211,7 +256,9 @@ WIDGET is a list of widget-buttons that are basically strings."
   (advice-remove 'dashboard-insert-projects
                  'dashboard-columns--insert-projects)
   (advice-remove 'dashboard-insert-bookmarks
-                 'dashboard-columns--insert-bookmarks))
+                 'dashboard-columns--insert-bookmarks)
+  (advice-remove 'dashboard-remove-item-under
+                 'dashboard-columns--remove-item))
 
 (provide 'dashboard-columns)
 ;;; dashboard-columns.el ends here
