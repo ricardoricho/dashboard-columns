@@ -33,7 +33,7 @@ Activate columns with a list of dashboard items, size and number of columns, for
 That would split a list of 15 bookmarks in 3 columns, 15 projects in 3 columns
 and 20 agenda items in 2 (default) columns.
 
-To restore origial dashboard, columns hack could be deactivated.
+To restore original dashboard, columns hack could be deactivated.
 #+begin_src emacs-lisp
   (dasboard-columns-deactivate)
 #+end_src
@@ -43,10 +43,12 @@ To restore origial dashboard, columns hack could be deactivated.
 Add after dashboard
 #+begin_src emacs-lisp
   (use-package dashboard-columns
-    :load-path "Path to dashboard-columns soruce"
+    :load-path "Path to dashboard-columns source"
     :after dashboard
     :config
-    (dashboard-columns-activate))
+    (dashboard-columns-activate '((bookmarks 15 . 3)
+                                  (projects 15 . 3)
+                                  (agenda . 20))))
 #+end_src
 
 * Straight
@@ -56,5 +58,7 @@ Add after dashboard
     :straight (dashboard-columns :type git :repo "https://git.sr.ht/~richo/dashboard-columns")
     :after dashboard
     :config
-    (dashboard-columns-activate))
+    (dashboard-columns-activate '((bookmarks 15 . 3)
+                                  (projects 15 . 3)
+                                  (agenda . 20))))
 #+end_src
