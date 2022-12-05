@@ -3,8 +3,8 @@
 ;;; Code:
 
 (require  'cl-lib)
-(require 'dashboard)
 (require 'all-the-icons)
+(require 'dashboard)
 
 (defvar dashboard-columns-old-items nil
   "Store dashboard-items when columns are activated.")
@@ -53,14 +53,7 @@ WIDGET is a list of widget-buttons that are basically strings."
   (let ((column-length (ceiling (- (frame-width) (* 4 columns)) columns)))
     (dolist (group (reverse (dashboard-columns--slice widget columns)))
       (dolist (item (reverse group))
-        (let* ((item-width (string-width item))
-               ;; Truncate element TAG
-               (tag (if (< item-width column-length) item
-                      (truncate-string-to-width item (- column-length 1))))
-               (format-padding (if (< item-width column-length)
-                                   (format "%%%ss" (- column-length item-width))
-                                 "%1s"))
-               (padding (format format-padding "")))
+        (let ((tag (dashboard-columns-truncate item column-length)))
           (add-text-properties 0 (string-width tag)
                                (list 'dashboard-section section)
                                tag)
@@ -70,11 +63,13 @@ WIDGET is a list of widget-buttons that are basically strings."
                          :value tag
                          :button-face 'dashboard-items-face
                          :mouse-face 'highlight
-                         :button-prefix " "
-                         :button-suffix padding
                          :format "%[%t%]")
           ))
       (insert "\n"))))
+
+(defun dashboard-columns-truncate (item length)
+  "Truncate ITEM string to given LENGTH."
+  (truncate-string-to-width item (- length 1) 1 ?\s t))
 
 (defun dashboard-columns--slice (list columns)
   ;; TODO: Generate columns horizontal or vertical
