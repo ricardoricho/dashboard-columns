@@ -2,7 +2,7 @@
 
 A hack to show dashboard items in columns
 
-* Instalation
+* Installation
 
 Clone repository from any source:
 - Sourcehut
@@ -18,6 +18,35 @@ Clone repository from any source:
 Add path to ~load-path~
 #+begin_src emacs-lisp
   (add-to-list <dashboard-colums-path> 'load-path)
+#+end_src
+
+** Use-package
+
+Add after dashboard
+#+begin_src emacs-lisp
+  (use-package dashboard-columns
+    :load-path "Path to dashboard-columns source"
+    :after dashboard
+    :config
+    (dashboard-columns-activate '((bookmarks 15 . 3)
+                                  (projects 15 . 3)
+                                  (agenda . 20))))
+#+end_src
+
+** Straight
+
+After setting ~(setq straight-use-package-by-default t)~ you can use ~:host
+sourcehut~ with ~:repo "richo/dashboard-columns"~ or use ~:host github~ with ~:repo
+"ricardoricho/dashboard-columns"~
+
+#+begin_src emacs-lisp
+  (use-package dashboard-columns
+    :straight (dashboard-columns :host sourcehut :repo "richo/dashboard-columns")
+    :after dashboard
+    :config
+    (dashboard-columns-activate '((bookmarks 15 . 3)
+                                  (projects 15 . 3)
+                                  (agenda . 20))))
 #+end_src
 
 * Usage
@@ -36,29 +65,4 @@ and 20 agenda items in 2 (default) columns.
 To restore original dashboard, columns hack could be deactivated.
 #+begin_src emacs-lisp
   (dasboard-columns-deactivate)
-#+end_src
-
-* Use-package
-
-Add after dashboard
-#+begin_src emacs-lisp
-  (use-package dashboard-columns
-    :load-path "Path to dashboard-columns source"
-    :after dashboard
-    :config
-    (dashboard-columns-activate '((bookmarks 15 . 3)
-                                  (projects 15 . 3)
-                                  (agenda . 20))))
-#+end_src
-
-* Straight
-
-#+begin_src emacs-lisp
-  (use-package dashboard-columns
-    :straight (dashboard-columns :type git :repo "https://git.sr.ht/~richo/dashboard-columns")
-    :after dashboard
-    :config
-    (dashboard-columns-activate '((bookmarks 15 . 3)
-                                  (projects 15 . 3)
-                                  (agenda . 20))))
 #+end_src
