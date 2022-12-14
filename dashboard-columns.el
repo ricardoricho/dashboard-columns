@@ -86,13 +86,14 @@ WIDGET is a list of widget-buttons that are basically strings."
                          :value tag
                          :button-face 'dashboard-items-face
                          :mouse-face 'highlight
+                         :button-prefix " "
                          :format "%[%t%]")
           ))
       (insert "\n"))))
 
 (defun dashboard-columns-truncate (item length)
   "Truncate ITEM string to given LENGTH."
-  (truncate-string-to-width item (- length 1) 1 ?\s t))
+  (truncate-string-to-width item (- length 1) 0 ?\s t))
 
 (defun dashboard-columns--slice (list columns)
   ;; TODO: Generate columns horizontal or vertical
