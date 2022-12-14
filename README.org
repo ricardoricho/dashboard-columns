@@ -7,7 +7,7 @@ A hack to show dashboard items in columns
 Clone repository from any source:
 - Sourcehut
 #+begin_src sh
-  git clone http://sr.ht/~richo/dasboard-columns
+  git clone http://sr.ht/~richo/dashboard-columns
 #+end_src
 
 - Github
@@ -64,5 +64,5 @@ and 20 agenda items in 2 (default) columns.
 
 To restore original dashboard, columns hack could be deactivated.
 #+begin_src emacs-lisp
-  (dasboard-columns-deactivate)
+  (dashboard-columns-deactivate)
 #+end_src
