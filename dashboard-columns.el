@@ -54,7 +54,8 @@ Add SHORTCUT to reach section and ACTION is for the widget action of each item."
 (defun dashboard-columns--insert-heading-icon (shortcut)
   "Insert heading icon for SHORTCUT."
   (format "%s " (all-the-icons-octicon
-                 (cdr (assoc shortcut dashboard-heading-icons)))))
+                 (cdr (assoc shortcut dashboard-heading-icons))
+                 :height 1.2 :face 'dashboard-heading)))
 
 (defun dashboard-columns--insert-shortcut (shortcut)
   "Insert SHORTCUT into dashboard.
@@ -188,9 +189,10 @@ WIDGET is a list of widget-buttons that are basically strings."
   "Format PROJECT for dashboard, includes properties."
   (let* ((path (expand-file-name project))
          (name (file-name-nondirectory (directory-file-name project)))
-         (project-format (format "%s %s - %s"
-            (all-the-icons-icon-for-dir project :heigth 1.2 :v-adjust 0.0 )
-            name project)))
+         (project-format
+          (format "%s %s - %s"
+                  (all-the-icons-icon-for-dir project :heigth 1.2)
+                  name project)))
     (add-text-properties 0 (length project-format)
                          (list 'dashboard-project-name name
                                'dashboard-project-path path)
@@ -225,9 +227,10 @@ WIDGET is a list of widget-buttons that are basically strings."
   "Format a BOOKMARK."
   (let ((filename bookmark)
         (path (expand-file-name bookmark))
-        (bookmark-format (format "%s %s"
-                                 (all-the-icons-icon-for-file bookmark :heigth 1.2 :v-adjust 0.0)
-                                 bookmark)))
+        (bookmark-format
+         (format "%s %s"
+                 (all-the-icons-icon-for-file bookmark :heigth 1.2)
+                 bookmark)))
     (add-text-properties 0 (length bookmark-format)
                          (list 'dashboard-path path
                                'dashboard-filename filename)
