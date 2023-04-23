@@ -66,3 +66,11 @@ To restore original dashboard, columns hack could be deactivated.
 #+begin_src emacs-lisp
   (dashboard-columns-deactivate)
 #+end_src
+
+* Icons
+
+Custom variable ~dashboard-icon-provider~ could take values of ~'all-the-icons~,
+~'nerd-icons~ or ~nil~ to enable or disable icons using the
+corresponding library. Note that icon package needs to be required before
+dashboard-columns, using ~(require 'nerd-icons)~ or by setting ~:demand t~ in
+~use-package~ delcaration: ~(use-package nerd-icons :demand t)~.

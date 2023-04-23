@@ -25,8 +25,8 @@
 ;;; Code:
 
 (require  'cl-lib)
-(require 'all-the-icons)
 (require 'dashboard)
+(require 'dashboard-icons)
 
 (defvar dashboard-columns-old-items nil
   "Store dashboard-items when columns are activated.")
@@ -53,7 +53,7 @@ Add SHORTCUT to reach section and ACTION is for the widget action of each item."
 
 (defun dashboard-columns--insert-heading-icon (shortcut)
   "Insert heading icon for SHORTCUT."
-  (format "%s " (all-the-icons-octicon
+  (format "%s " (dashboard-icons-octicon
                  (cdr (assoc shortcut dashboard-heading-icons))
                  :height 1.2 :face 'dashboard-heading)))
 
@@ -192,7 +192,7 @@ WIDGET is a list of widget-buttons that are basically strings."
          (name (file-name-nondirectory (directory-file-name project)))
          (project-format
           (format "%s %s - %s"
-                  (all-the-icons-icon-for-dir project :heigth 1.2)
+                  (dashboard-icons-icon-for-dir project :heigth 1.2)
                   name project)))
     (add-text-properties 0 (length project-format)
                          (list 'dashboard-project-name name
@@ -201,6 +201,11 @@ WIDGET is a list of widget-buttons that are basically strings."
     project-format))
 
 ;; Bookmarks
+
+(defun dashboard-columns--bookmarks ()
+  "Return a list of formatted bookmarks."
+  (mapcar 'dashboard-columns--bookmarks-format (bookmark-all-names)))
+
 (defun dashboard-columns--insert-bookmarks (config)
   "Use CONFIG to insert bookmarks in dashboard."
   (require 'bookmark)
@@ -214,23 +219,13 @@ WIDGET is a list of widget-buttons that are basically strings."
                                         'bookmark-jump
                                         'filename))))
 
-(defun dashboard-columns--remove-bookmarks ()
-  "Call `dashboard-columns--remove-bookmark' with widget at point."
-  (dashboard-columns--action-on-item (widget-at (point))
-                                     'bookmark-delete
-                                     'filename))
-
-(defun dashboard-columns--bookmarks ()
-  "Return a list of formatted bookmarks."
-  (mapcar 'dashboard-columns--bookmarks-format (bookmark-all-names)))
-
 (defun dashboard-columns--bookmarks-format (bookmark)
   "Format a BOOKMARK."
   (let ((filename bookmark)
         (path (expand-file-name bookmark))
         (bookmark-format
          (format "%s %s"
-                 (all-the-icons-icon-for-file bookmark :heigth 1.2)
+                 (dashboard-icons-icon-for-file bookmark :heigth 1.2)
                  bookmark)))
     (add-text-properties 0 (length bookmark-format)
                          (list 'dashboard-path path
@@ -238,8 +233,11 @@ WIDGET is a list of widget-buttons that are basically strings."
                          bookmark-format)
     bookmark-format))
 
-(defun dashboard-columns--remove-bookmark (bookmark)
-  "Remove BOOKMARK from dashboard.")
+(defun dashboard-columns--remove-bookmarks ()
+  "Call `dashboard-columns--remove-bookmark' with widget at point."
+  (dashboard-columns--action-on-item (widget-at (point))
+                                     'bookmark-delete
+                                     'filename))
 
 ;; Remove items
 (defun dashboard-columns--remove-item ()
