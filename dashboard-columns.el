@@ -191,7 +191,7 @@ WIDGET is a list of widget-buttons that are basically strings."
   (let* ((path (expand-file-name project))
          (name (file-name-nondirectory (directory-file-name project)))
          (project-format
-          (format "%s %s - %s"
+          (format dashboard-projects-item-format
                   (dashboard-icons-icon-for-dir project :heigth 1.2)
                   name project)))
     (add-text-properties 0 (length project-format)
@@ -224,7 +224,7 @@ WIDGET is a list of widget-buttons that are basically strings."
   (let ((filename bookmark)
         (path (expand-file-name bookmark))
         (bookmark-format
-         (format "%s %s"
+         (format dashboard-bookmarks-item-format
                  (dashboard-icons-icon-for-file bookmark :heigth 1.2)
                  bookmark)))
     (add-text-properties 0 (length bookmark-format)
