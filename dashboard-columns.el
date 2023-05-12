@@ -28,6 +28,11 @@
 (require 'dashboard)
 (require 'dashboard-icons)
 
+(defcustom dashboard-columns-default-columns 2
+  "Default number of columns to divide the item list."
+  :type 'integer
+  :group 'dashboard)
+
 (defvar dashboard-columns-old-items nil
   "Store dashboard-items when columns are activated.")
 
@@ -38,7 +43,8 @@ to take from LIST and COLUMNS is the number of columns to use in that section.
 Add SHORTCUT to reach section and ACTION is for the widget action of each item."
   (let* ((size (or (and (numberp config) config)
                    (car config)))
-         (columns (or (and (numberp config) 2) ;; Default number of columns.
+         (columns (or (and (numberp config)
+                           dashboard-columns-default-columns)
                       (cdr config)))
          (items (cl-subseq list 0 (min (length list) size))))
     (progn
