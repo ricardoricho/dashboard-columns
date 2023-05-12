@@ -33,6 +33,11 @@
   :type 'integer
   :group 'dashboard)
 
+(defcustom dashboard-columns-dashboard-items dashboard-items
+  "Default list of items."
+  :type  '(repeat (alist :key-type symbol :value-type integer))
+  :group 'dashboard)
+
 (defvar dashboard-columns-old-items nil
   "Store dashboard-items when columns are activated.")
 
@@ -257,11 +262,11 @@ WIDGET is a list of widget-buttons that are basically strings."
     (funcall remove-command)))
 
 ;;;###autoload;
-(defun dashboard-columns-activate (items)
+(defun dashboard-columns-activate (&optional items)
   "Define alias for `dashboard-insert' to insert ITEMS."
   (interactive)
   (setq dashboard-columns-old-items dashboard-items)
-  (setq dashboard-items items)
+  (setq dashboard-items (or items dashboard-columns-dashboard-items))
   (advice-add 'dashboard-remove-item-under :override
               'dashboard-columns--remove-item)
   (advice-add 'dashboard-insert-agenda :override
