@@ -276,8 +276,7 @@ WIDGET is a list of widget-buttons that are basically strings."
   (advice-add 'dashboard-insert-projects :override
               'dashboard-columns--insert-projects)
   (advice-add 'dashboard-insert-bookmarks :override
-              'dashboard-columns--insert-bookmarks)
-  (dashboard-refresh-buffer))
+              'dashboard-columns--insert-bookmarks))
 
 ;;;###autoload;
 (defun dashboard-columns-deactivate ()
@@ -291,8 +290,7 @@ WIDGET is a list of widget-buttons that are basically strings."
   (advice-remove 'dashboard-insert-bookmarks
                  'dashboard-columns--insert-bookmarks)
   (advice-remove 'dashboard-remove-item-under
-                 'dashboard-columns--remove-item)
-  (dashboard-open))
+                 'dashboard-columns--remove-item))
 
 (provide 'dashboard-columns)
 ;;; dashboard-columns.el ends here
