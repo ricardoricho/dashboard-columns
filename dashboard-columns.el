@@ -163,7 +163,8 @@ WIDGET is a list of widget-buttons that are basically strings."
      (with-current-buffer (find-file-noselect file)
        (goto-char point)
        (call-interactively 'org-todo)))
-   'agenda-file 'agenda-loc))
+   'agenda-file 'agenda-loc)
+  (dashboard-open))
 
 ;; Projects
 (defun dashboard-columns--insert-projects (config)
@@ -183,7 +184,8 @@ WIDGET is a list of widget-buttons that are basically strings."
   (dashboard-columns--action-on-item
    (widget-at (point))
    'dashboard-columns--remove-project
-   'project-path))
+   'project-path)
+  (dashboard-open))
 
 (defun dashboard-columns--remove-project (path)
   "Call corresponding backend removing function with PATH as argument."
@@ -274,7 +276,8 @@ WIDGET is a list of widget-buttons that are basically strings."
   (advice-add 'dashboard-insert-projects :override
               'dashboard-columns--insert-projects)
   (advice-add 'dashboard-insert-bookmarks :override
-              'dashboard-columns--insert-bookmarks))
+              'dashboard-columns--insert-bookmarks)
+  (dashboard-refresh-buffer))
 
 ;;;###autoload;
 (defun dashboard-columns-deactivate ()
@@ -288,7 +291,8 @@ WIDGET is a list of widget-buttons that are basically strings."
   (advice-remove 'dashboard-insert-bookmarks
                  'dashboard-columns--insert-bookmarks)
   (advice-remove 'dashboard-remove-item-under
-                 'dashboard-columns--remove-item))
+                 'dashboard-columns--remove-item)
+  (dashboard-open))
 
 (provide 'dashboard-columns)
 ;;; dashboard-columns.el ends here
