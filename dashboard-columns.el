@@ -234,15 +234,14 @@ WIDGET is a list of widget-buttons that are basically strings."
 
 (defun dashboard-columns--bookmarks-format (bookmark)
   "Format a BOOKMARK."
-  (let ((filename bookmark)
-        (path (expand-file-name bookmark))
-        (bookmark-format
-         (format dashboard-bookmarks-item-format
-                 (dashboard-icons-icon-for-file bookmark :heigth 1.2)
-                 bookmark)))
+  (let* ((filename bookmark)
+         (path (bookmark-get-filename bookmark))
+         (bookmark-format
+          (format dashboard-bookmarks-item-format
+                  (dashboard-icons-icon-for-file-or-dir path :heigth 1.2)
+                  bookmark)))
     (add-text-properties 0 (length bookmark-format)
-                         (list 'dashboard-path path
-                               'dashboard-filename filename)
+                         (list 'dashboard-filename filename)
                          bookmark-format)
     bookmark-format))
 
