@@ -42,6 +42,12 @@
   (cl-case dashboard-icons-provider
     ((nerd-icons) (apply 'nerd-icons-octicon (concat "nf-oct-" icon) options))
     ((all-the-icons) (apply 'all-the-icons-octicon icon options))
+
+(defun dashboard-icons-icon-for-remote (&optional options)
+  "Return a remote icon passing OPTIONS to icon provider."
+  (cl-case dashboard-icons-provider
+    (`nerd-icons (apply 'nerd-icons-codicon "nf-cod-radio_tower" options))
+    (`all-the-icons (apply 'all-the-icons-octicon "radio_tower" options))
     (otherwise "")))
 
 (defun dashboard-icons-icon-for-dir (dir &rest options)
@@ -57,6 +63,15 @@
     ((nerd-icons) (apply 'nerd-icons-icon-for-file file options))
     ((all-the-icons) (apply 'all-the-icons-icon-for-file file options))
     (t "")))
+
+(defun dashboard-icons-icon-for-file-or-dir (file-or-dir &rest options)
+  "Return an icon for FILE-OR-DIR with OPTIONS."
+  (cond
+   ((file-remote-p file-or-dir)
+    (dashboard-icons-icon-for-remote options))
+   ((file-directory-p file-or-dir)
+    (dashboard-icons-icon-for-dir file-or-dir options))
+   (t (dashboard-icons-icon-for-file file-or-dir options))))
 
 (defun dashboard-icon-footer ()
   "Get the footer icon if DISPLAY-ICONS.
