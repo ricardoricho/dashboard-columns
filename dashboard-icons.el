@@ -40,8 +40,9 @@
 (defun dashboard-icons-octicon (icon &rest options)
   "Call octicon with ICON passing OPTIONS as rest to icon provider."
   (cl-case dashboard-icons-provider
-    ((nerd-icons) (apply 'nerd-icons-octicon (concat "nf-oct-" icon) options))
-    ((all-the-icons) (apply 'all-the-icons-octicon icon options))
+    (`nerd-icons (apply 'nerd-icons-octicon (concat "nf-oct-" icon) options))
+    (`all-the-icons (apply 'all-the-icons-octicon icon options))
+    (otherwise "")))
 
 (defun dashboard-icons-icon-for-remote (&optional options)
   "Return a remote icon passing OPTIONS to icon provider."
