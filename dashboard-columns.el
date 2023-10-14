@@ -41,6 +41,53 @@
 (defvar dashboard-columns-old-items nil
   "Store dashboard-items when columns are activated.")
 
+(defun dashboard-columns--insert-items ()
+  "Insert the items into the buffer."
+  (interactive)
+  (let ((inhibit-redisplay t)
+        (inhibit-read-only t)
+        (indent 0))
+    (with-current-buffer (get-buffer-create dashboard-buffer-name)
+      (erase-buffer)
+      (dashboard-insert-banner)
+      (insert dashboard-page-separator)
+      (mapc 'dashboard-columns--before-insert-hook dashboard-items)
+      (mapc 'dashboard-columns--insert-item dashboard-items)
+      (mapc 'dashboard-columns--after-insert-hook dashboard-items)
+      (dashboard-insert-footer)
+      (dashboard-mode)
+      (goto-char (point-min)))))
+
+(defun dashboard-columns--before-insert-hook (item)
+  "Run hook for ITEM if exists."
+  (let* ((hook-name-preffix "dashboard-columns-")
+         (hook-name-suffix "-before-insert-hook")
+         (item-name (symbol-name (car item)))
+         (hook-name (concat hook-name-preffix item-name hook-name-suffix))
+         (hook-function (intern hook-name)))
+    (when (fboundp hook-function)
+      (funcall hook-function))))
+
+(defun dashboard-columns--insert-item (item-config)
+  "Insert ITEM-CONFIG in buffer."
+  (let* ((item (or (car-safe item-config) item-config))
+         (size (or (cdr-safe item-config) dashboard-items-default-length))
+         (item-generator (cdr-safe (assoc item dashboard-item-generators))))
+    (if dashboard-center-content
+        (let ((start (point))
+              (end (progn (funcall item-generator size) (point-max))))
+          (dashboard-center-text start end))
+      (funcall item-generator size))
+    (insert dashboard-page-separator)))
+
+(defun dashboard-columns--after-insert-hook (item)
+  "Run hook for ITEM after insert, if exists."
+  (let* ((item-name (symbol-name (car item)))
+         (hook-name (concat "dashboard-columns-" item-name "-after-insert-hook"))
+         (hook-function (intern hook-name)))
+    (when (fboundp hook-function)
+      (funcall hook-function))))
+
 (defun dashboard-columns--insert-section (title list config shortcut action)
   "Add a section with TITLE, take CONFIG items from LIST if CONFIG  is a number.
 CONFIG could also be a pair (ITEMS . COLUMNS) where ITEMS is the number of items
@@ -251,6 +298,41 @@ WIDGET is a list of widget-buttons that are basically strings."
                                      'bookmark-delete
                                      'filename))
 
+;; Recents
+
+(defun dashboard-columns--insert-recents (config)
+  "Insert the recentf file section in dashbord acording to CONFIG."
+  (require 'recentf)
+  (recentf-load-list)
+  (dashboard-columns--insert-section
+   "Recent files:"
+   (dashboard-columns-recents--recent-files)
+   config
+   'recents
+   (lambda (widget &rest _)
+     (dashboard-columns--action-on-item widget 'recentf-open 'recents-file))))
+
+(defun dashboard-columns-recents--recent-files ()
+  "Retrive the recent files list."
+  (mapcar 'dashboard-columns-recents--format-file recentf-list))
+
+(defun dashboard-columns-recents--format-file (file)
+  "Format FILE to be inserted as a recent file in dashboard."
+  (let ((file-name (file-name-nondirectory file)))
+    (propertize (format "%s" file-name) 'dashboard-recents-file file)))
+
+(defun dashboard-columns-recents-before-insert-hook ()
+  "Run before all items are insert."
+  (recentf-mode -1)
+  (message "Deactivating recent mode.")
+  (message "Recent list is %s" recentf-list))
+
+(defun dashboard-columns-recents-after-insert-hook ()
+  "Run after all dashboard-items were inserted."
+  (message "Recents list: %s" recentf-list)
+  (message "Activating recent mode")
+  (recentf-mode 1))
+
 ;; Remove items
 (defun dashboard-columns--remove-item ()
   "Overwrite `dashboard-remove-item-under'."
@@ -268,14 +350,18 @@ WIDGET is a list of widget-buttons that are basically strings."
   (interactive)
   (setq dashboard-columns-old-items dashboard-items)
   (setq dashboard-items (or items dashboard-columns-dashboard-items))
-  (advice-add 'dashboard-remove-item-under :override
-              'dashboard-columns--remove-item)
   (advice-add 'dashboard-insert-agenda :override
               'dashboard-columns--insert-agenda)
   (advice-add 'dashboard-insert-projects :override
               'dashboard-columns--insert-projects)
   (advice-add 'dashboard-insert-bookmarks :override
-              'dashboard-columns--insert-bookmarks))
+              'dashboard-columns--insert-bookmarks)
+  (advice-add 'dashboard-insert-recents :override
+              'dashboard-columns--insert-recents)
+  (advice-add 'dashboard-remove-item-under :override
+              'dashboard-columns--remove-item)
+  (advice-add 'dashboard-insert-startupify-lists :override
+              'dashboard-columns--insert-items))
 
 ;;;###autoload;
 (defun dashboard-columns-deactivate ()
@@ -288,8 +374,12 @@ WIDGET is a list of widget-buttons that are basically strings."
                  'dashboard-columns--insert-projects)
   (advice-remove 'dashboard-insert-bookmarks
                  'dashboard-columns--insert-bookmarks)
+  (advice-remove 'dashboard-insert-recents
+                 'dashboard-columns--insert-recents)
   (advice-remove 'dashboard-remove-item-under
-                 'dashboard-columns--remove-item))
+                 'dashboard-columns--remove-item)
+  (advice-remove 'dashboard-insert-startupify-lists
+                 'dashboard-columns--insert-items))
 
 (provide 'dashboard-columns)
 ;;; dashboard-columns.el ends here
