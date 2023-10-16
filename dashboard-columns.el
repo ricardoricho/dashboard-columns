@@ -294,44 +294,56 @@ WIDGET is a list of widget-buttons that are basically strings."
 
 (defun dashboard-columns--remove-bookmarks ()
   "Call `dashboard-columns--remove-bookmark' with widget at point."
-  (dashboard-columns--action-on-item (widget-at (point))
-                                     'bookmark-delete
-                                     'filename))
+  (dashboard-columns--action-on-item
+   (widget-at (point)) 'bookmark-delete 'filename))
 
 ;; Recents
 
 (defun dashboard-columns--insert-recents (config)
   "Insert the recentf file section in dashbord acording to CONFIG."
-  (require 'recentf)
-  (recentf-load-list)
   (dashboard-columns--insert-section
    "Recent files:"
-   (dashboard-columns-recents--recent-files)
+   (dashboard-columns-recents--recents-files)
    config
    'recents
    (lambda (widget &rest _)
      (dashboard-columns--action-on-item widget 'recentf-open 'recents-file))))
 
-(defun dashboard-columns-recents--recent-files ()
+(defun dashboard-columns-recents--recents-files ()
   "Retrive the recent files list."
   (mapcar 'dashboard-columns-recents--format-file recentf-list))
 
 (defun dashboard-columns-recents--format-file (file)
   "Format FILE to be inserted as a recent file in dashboard."
-  (let ((file-name (file-name-nondirectory file)))
-    (propertize (format "%s" file-name) 'dashboard-recents-file file)))
+  (let ((file-name (file-name-nondirectory file))
+        (icon-file (dashboard-icons-icon-for-file-or-dir file :heigth 1.2)))
+    (propertize (format "%s %s" icon-file file-name)
+                'dashboard-recents-file file)))
 
 (defun dashboard-columns-recents-before-insert-hook ()
   "Run before all items are insert."
-  (recentf-mode -1)
-  (message "Deactivating recent mode.")
-  (message "Recent list is %s" recentf-list))
+  (require 'recentf)
+  (if (recentf-enabled-p)
+      (dashboard-mute-apply (recentf-save-list)
+                            (recentf-mode -1))
+    (dashboard-mute-apply (recentf-load-list)
+                          (recentf-mode -1))))
 
 (defun dashboard-columns-recents-after-insert-hook ()
   "Run after all dashboard-items were inserted."
-  (message "Recents list: %s" recentf-list)
-  (message "Activating recent mode")
-  (recentf-mode 1))
+  (dashboard-mute-apply (recentf-mode 1)))
+
+(defun dashboard-columns--remove-recents ()
+  "Remove a recent file from list."
+  (dashboard-columns--action-on-item
+   (widget-at (point)) 'dashboard-columns-remove-recent 'recents-file))
+
+(defun dashboard-columns-remove-recent (file)
+  "Remove FILE from recentf-list."
+  (message "Remove %s from %s" file recentf-list)
+  (setq recentf-list (remove file recentf-list))
+  (recentf-save-list)
+  (dashboard-open))
 
 ;; Remove items
 (defun dashboard-columns--remove-item ()
