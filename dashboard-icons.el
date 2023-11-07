@@ -20,6 +20,8 @@
 
 ;;; Code:
 
+(require 'cl-lib)
+
 (declare-function nerd-icons-icon-for-dir "ext:nerd-icons.el")
 (declare-function nerd-icons-icon-for-file "ext:nerd-icons.el")
 (declare-function nerd-icons-sucicon "ext:nerd-icons.el")
@@ -35,6 +37,13 @@
   :type '(choice (const :tag "None" nil)
                  (const :tag "Nerd icons" nerd-icons)
                  (const :tag "All the icons" all-the-icons))
+  :group 'dashboard)
+
+(defcustom dashboard-icons-file-extension-color-list
+  '(("rb" nerd-icons-red) ("js" nerd-icons-lyellow) ("el" nerd-icons-lblue)
+    ("haml" nerd-icons-orange) ("org" nerd-icons-lgreen))
+  "List of extension color to foreground icon."
+  :type 'list
   :group 'dashboard)
 
 (defun dashboard-icons-octicon (icon &rest options)
@@ -60,10 +69,21 @@
 
 (defun dashboard-icons-icon-for-file (file &rest options)
   "Return icon for FILE passing OPTIONS to icon provider."
-  (cl-case dashboard-icons-provider
+  (let ((options (dashboard-icons-face-icon-for-file file options)))
+   (cl-case dashboard-icons-provider
     ((nerd-icons) (apply 'nerd-icons-icon-for-file file options))
     ((all-the-icons) (apply 'all-the-icons-icon-for-file file options))
-    (t "")))
+    (t ""))))
+
+(defun dashboard-icons-face-icon-for-file (file &rest options)
+  "Return face for FILE icon and append to OPTIONS if not present."
+  (let ((file-face (dashboard-icons-face-for-file file)))
+    (if (assoc :face options) options
+      (append `(:face ,file-face) options))))
+
+(defun dashboard-icons-face-for-file (file)
+  "Return face for FILE."
+  (cadr (assoc (file-name-extension file) dashboard-icons-file-extension-color-list)))
 
 (defun dashboard-icons-icon-for-file-or-dir (file-or-dir &rest options)
   "Return an icon for FILE-OR-DIR with OPTIONS."
