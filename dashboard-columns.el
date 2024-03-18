@@ -41,6 +41,10 @@
 (defvar dashboard-columns-old-items nil
   "Store dashboard-items when columns are activated.")
 
+(defun dashboard-columns-insert-items ()
+  "Insert all items in dashboard."
+  (mapc 'dashboard-columns--insert-item dashboard-items))
+
 (defun dashboard-columns--insert-items ()
   "Insert the items into the buffer."
   (interactive)
@@ -49,12 +53,9 @@
         (indent 0))
     (with-current-buffer (get-buffer-create dashboard-buffer-name)
       (erase-buffer)
-      (dashboard-insert-banner)
-      (insert dashboard-page-separator)
       (mapc 'dashboard-columns--before-insert-hook dashboard-items)
-      (mapc 'dashboard-columns--insert-item dashboard-items)
+      (mapc 'funcall dashboard-startupify-list)
       (mapc 'dashboard-columns--after-insert-hook dashboard-items)
-      (dashboard-insert-footer)
       (dashboard-mode)
       (goto-char (point-min)))))
 
@@ -373,7 +374,9 @@ WIDGET is a list of widget-buttons that are basically strings."
   (advice-add 'dashboard-remove-item-under :override
               'dashboard-columns--remove-item)
   (advice-add 'dashboard-insert-startupify-lists :override
-              'dashboard-columns--insert-items))
+              'dashboard-columns--insert-items)
+  (advice-add 'dashboard-insert-items :override
+              'dashboard-columns-insert-items))
 
 ;;;###autoload;
 (defun dashboard-columns-deactivate ()
@@ -391,7 +394,9 @@ WIDGET is a list of widget-buttons that are basically strings."
   (advice-remove 'dashboard-remove-item-under
                  'dashboard-columns--remove-item)
   (advice-remove 'dashboard-insert-startupify-lists
-                 'dashboard-columns--insert-items))
+                 'dashboard-columns--insert-items)
+  (advice-remove 'dashboard-insert-items
+                 'dashboard-columns-insert-items))
 
 (provide 'dashboard-columns)
 ;;; dashboard-columns.el ends here
