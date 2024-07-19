@@ -53,21 +53,16 @@
         (indent 0))
     (with-current-buffer (get-buffer-create dashboard-buffer-name)
       (erase-buffer)
-      (mapc 'dashboard-columns--before-insert-hook dashboard-items)
+      (run-hooks #'dashboard-columns-before-insert-hook)
       (mapc 'funcall dashboard-startupify-list)
-      (mapc 'dashboard-columns--after-insert-hook dashboard-items)
+      (run-hooks #'dashboard-columns-after-insert-hook)
       (dashboard-mode)
       (goto-char (point-min)))))
 
-(defun dashboard-columns--before-insert-hook (item)
-  "Run hook for ITEM if exists."
-  (let* ((hook-name-preffix "dashboard-columns-")
-         (hook-name-suffix "-before-insert-hook")
-         (item-name (symbol-name (car item)))
-         (hook-name (concat hook-name-preffix item-name hook-name-suffix))
-         (hook-function (intern hook-name)))
-    (when (fboundp hook-function)
-      (funcall hook-function))))
+(defvar dashboard-columns-before-insert-hooks nil
+  "Hooks runs before inserting items.")
+(defvar dashboard-columns-after-insert-hooks nil
+  "Hooks runs after inserting items.")
 
 (defun dashboard-columns--insert-item (item-config)
   "Insert ITEM-CONFIG in buffer."
@@ -321,7 +316,7 @@ WIDGET is a list of widget-buttons that are basically strings."
     (propertize (format "%s %s" icon-file file-name)
                 'dashboard-recents-file file)))
 
-(defun dashboard-columns-recents-before-insert-hook ()
+(defun dashboard-columns-recents-before-insert ()
   "Run before all items are insert."
   (require 'recentf)
   (if (recentf-enabled-p)
@@ -330,7 +325,14 @@ WIDGET is a list of widget-buttons that are basically strings."
     (dashboard-mute-apply (recentf-load-list)
                           (recentf-mode -1))))
 
-(defun dashboard-columns-recents-after-insert-hook ()
+(defun dashboard-columns-recents-setup ()
+  "Setup recents by adding functions to hooks."
+  (add-hook 'dashboard-columns-before-insert-hook
+            'dashboard-columns-recents-before-insert)
+  (add-hook 'dashboard-columns-after-insert-hook
+            'dashboard-columns-recents-after-insert))
+
+(defun dashboard-columns-recents-after-insert ()
   "Run after all dashboard-items were inserted."
   (dashboard-mute-apply (recentf-mode 1)))
 
