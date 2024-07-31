@@ -74,7 +74,7 @@
               (end (progn (funcall item-generator size) (point-max))))
           (dashboard-center-text start end))
       (funcall item-generator size))
-    (insert dashboard-page-separator)))
+    (dashboard-insert-page-break)))
 
 (defun dashboard-columns--after-insert-hook (item)
   "Run hook for ITEM after insert, if exists."
