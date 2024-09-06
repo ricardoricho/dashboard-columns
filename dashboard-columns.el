@@ -53,11 +53,26 @@
         (indent 0))
     (with-current-buffer (get-buffer-create dashboard-buffer-name)
       (erase-buffer)
+      (display-buffer (current-buffer))
       (run-hooks #'dashboard-columns-before-insert-hook)
       (mapc 'funcall dashboard-startupify-list)
       (run-hooks #'dashboard-columns-after-insert-hook)
-      (dashboard-mode)
-      (goto-char (point-min)))))
+      (dashboard-columns--vertically-center-content)
+      (goto-char (point-min))
+      (dashboard-mode))))
+
+(defun dashboard-columns--vertically-center-content ()
+  "Vertically center the content buffer.  All content should be visible."
+  (when-let* (dashboard-vertically-center-content
+              (start-height (cdr (window-absolute-pixel-position (point-min))))
+              (end-height (cdr (window-absolute-pixel-position (point-max))))
+              (content-height (- end-height start-height))
+              (vertical-padding (floor (/ (- (window-pixel-height) content-height) 2)))
+              ((> vertical-padding 0))
+              (vertical-lines (1- (floor (/ vertical-padding (line-pixel-height)))))
+              ((> vertical-lines 0)))
+    (goto-char (point-min))
+    (insert (make-string vertical-lines ?\n))))
 
 (defvar dashboard-columns-before-insert-hooks nil
   "Hooks runs before inserting items.")
